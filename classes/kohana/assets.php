@@ -12,14 +12,22 @@ class Kohana_Assets {
 
   static function compile_coffee($source)
   {
-    throw new Exception('CoffeeScript not yet supported');
+    self::vendor(array('coffeescript/coffeescript', 'jsminplus'));
+
+    try
+    {
+      $js = CoffeeScript\compile(file_get_contents($source));
+    }
+    catch (Exception $e) {}
+
+    return JSMinPlus::minify($js);
   }
 
   static function compile_css($source)
   {
     self::vendor('cssmin');
 
-    return CssMin::minify( file_get_contents($source) );
+    return CssMin::minify(file_get_contents($source));
   }
 
   static function compile_js($source)
@@ -28,7 +36,7 @@ class Kohana_Assets {
 
     // Strips end semi-colons, which can break multi-source assets; should try
     // to find a better solution for this.
-    return JSMinPlus::minify( file_get_contents($source) ).';';
+    return JSMinPlus::minify(file_get_contents($source)).';';
   }
 
   static function compile_less($source)
@@ -40,7 +48,7 @@ class Kohana_Assets {
     $less->importDisabled = FALSE;
     $less->importDir = dirname($source);
 
-    return CssMin::minify( $less->parse( file_get_contents($source) ) );
+    return CssMin::minify($less->parse(file_get_contents($source)));
   }
 
   /**
