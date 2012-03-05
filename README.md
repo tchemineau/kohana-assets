@@ -6,7 +6,7 @@ Easy & efficient asset management for Kohana 3.
 
   - Out-of-the-box support for CSS ([CssMin](https://code.google.com/p/cssmin/)), 
     LESS ([lessphp](http://leafo.net/lessphp/)), JavaScript ([JsMinPlus](https://code.google.com/p/minify)), 
-    and CoffeeScript (eventually).
+    and CoffeeScript ([coffeescript-php](http://github.com/alxlit/coffeescript-php/).
   - Easy to use and extend
   - Efficient; assets are compiled once and served directly thereafter
   - Watch mode (checks for source modifications)
