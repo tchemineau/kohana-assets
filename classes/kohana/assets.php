@@ -10,45 +10,44 @@ class Kohana_Assets {
 
   static $config;
 
-  static function compile_coffee($source)
+  static function compile_coffee($coffee)
   {
-    self::vendor(array('coffeescript/coffeescript', 'jsminplus'));
+    $level = error_reporting();
+    error_reporting(0);
 
-    try
-    {
-      $js = CoffeeScript\compile(file_get_contents($source));
-    }
-    catch (Exception $e) {}
+    self::vendor('coffeescript/coffeescript');
 
-    return JSMinPlus::minify($js);
+    error_reporting($level);
+
+    return self::compile_js(CoffeeScript\compile($coffee));
   }
 
-  static function compile_css($source)
+  static function compile_css($css)
   {
     self::vendor('cssmin');
 
-    return CssMin::minify(file_get_contents($source));
+    return CssMin::minify($css);
   }
 
-  static function compile_js($source)
+  static function compile_js($js)
   {
     self::vendor('jsminplus');
 
     // Strips end semi-colons, which can break multi-source assets; should try
     // to find a better solution for this.
-    return JSMinPlus::minify(file_get_contents($source)).';';
+    return JSMinPlus::minify($js).';';
   }
 
-  static function compile_less($source)
+  static function compile_less($less, $filename)
   {
-    self::vendor(array('lessphp/lessc.inc', 'cssmin'));
+    self::vendor('lessphp/lessc.inc');
 
-    $less = new lessc();
+    $lessc = new lessc();
 
-    $less->importDisabled = FALSE;
-    $less->importDir = dirname($source);
+    $lessc->importDisabled = FALSE;
+    $lessc->importDir = dirname($filename);
 
-    return CssMin::minify($less->parse(file_get_contents($source)));
+    return self::compile_css($lessc->parse($less));
   }
 
   /**
@@ -56,15 +55,20 @@ class Kohana_Assets {
    *
    * @param   string  Target asset (e.g. css/style.css)
    *
-   * @return  array   Array containing the target's source files, or FALSE
+   * @return  array   Array containing the target's source files, or NULL
    */
   static function find_sources($target)
   {
-    $target = pathinfo($target);
+    $target = pathinfo( substr($target, strlen(self::target_dir())) );
+
+    if ( ! isset($target['extension']))
+    {
+      $target['extension'] = '';
+    }
 
     $target += array
     (
-      // Full path without the extension
+      // Path without the extension
       'pathname' => "{$target['dirname']}/{$target['filename']}",
 
       // Target type
@@ -73,8 +77,8 @@ class Kohana_Assets {
 
     $source = array
     (
-      // Directory that will contain the source file(s)
-      'dirname' => self::$config->source_dir.$target['dirname'],
+      // Directory that will contain source file(s)
+      'dirname' => self::source_dir().$target['dirname'],
 
       // Possible extension(s)
       'extension' => $target['extension'],
@@ -104,7 +108,7 @@ class Kohana_Assets {
 
     foreach ((array) $source['extension'] as $ext)
     {
-      if ($ext{0} === '.')
+      if ($ext && $ext{0} === '.')
       {
         $ext = substr($ext, 1);
       }
@@ -116,7 +120,7 @@ class Kohana_Assets {
       }
     }
 
-    return FALSE;
+    return NULL;
   }
 
   /**
@@ -124,14 +128,14 @@ class Kohana_Assets {
    */
   static function get_type($ext)
   {
-    if ($ext{0} !== '.')
+    if ($ext && $ext{0} !== '.')
     {
       $ext = ".{$ext}";
     }
 
     foreach (self::$config->types as $type => $extensions)
     {
-      if (in_array($ext, $extensions))
+      if (in_array($ext, $extensions, TRUE))
       {
         return $type;
       }
@@ -164,7 +168,7 @@ class Kohana_Assets {
 
     if (self::$config->watch)
     {
-      foreach (self::ls(self::$config->target_dir, NULL, TRUE) as $asset)
+      foreach (self::ls(self::target_dir(), NULL, TRUE) as $asset)
       {
         // Delete assets whose source files have changed (they'll be recompiled
         // the next time they are requested).
@@ -172,10 +176,8 @@ class Kohana_Assets {
       }
     }
 
-    $dir = basename(self::$config->target_dir);
-
     // Set route.
-    Route::set('assets', "{$dir}/<target>", array('target' => '.+'))
+    Route::set('assets', self::source_dir().'<target>', array('target' => '.+'))
       ->defaults(array(
           'controller' => 'assets',
           'action'     => 'serve'
@@ -196,28 +198,21 @@ class Kohana_Assets {
   {
     $files = array();
 
-    try
+    foreach (new DirectoryIterator($dir) as $file)
     {
-      foreach (new DirectoryIterator($dir) as $file)
+      if ($file->isFile())
       {
-        if ($file->isFile())
-        {
-          $ext = '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION);
+        $ext = '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION);
 
-          if ($extensions === NULL || in_array($ext, $extensions))
-          {
-            $files[] = $file->getPathname();
-          }
-        }
-        else if ($file->isDir() && ! $file->isDot() && $recurse)
+        if ($extensions === NULL || in_array($ext, $extensions))
         {
-          $files = array_merge($files, self::ls($file->getPathname(), $extensions, TRUE));
+          $files[] = $file->getPathname();
         }
       }
-    }
-    catch (Exception $e)
-    {
-      return FALSE;
+      else if ($file->isDir() && ! $file->isDot() && $recurse)
+      {
+        $files = array_merge($files, self::ls($file->getPathname(), $extensions, TRUE));
+      }
     }
 
     return $files;
@@ -237,10 +232,7 @@ class Kohana_Assets {
     {
       $target_modified = filemtime($target);
 
-      // Find source files
-      $sources = self::find_sources( substr($target, strlen(self::$config->target_dir)) );
-
-      foreach ((array) $sources as $source)
+      foreach ((array) self::find_sources($target) as $source)
       {
         if (filemtime($source) > $target_modified)
         {
@@ -252,11 +244,21 @@ class Kohana_Assets {
     return FALSE;
   }
 
+  static function source_dir()
+  {
+    return 'assets/';
+  }
+
+  static function target_dir()
+  {
+    return DOCROOT.self::source_dir();
+  }
+
   /**
    */
-  static function vendor($files)
+  static function vendor()
   {
-    foreach ((array) $files as $file)
+    foreach (func_get_args() as $file)
     {
       require_once Kohana::find_file('vendor', $file);
     }

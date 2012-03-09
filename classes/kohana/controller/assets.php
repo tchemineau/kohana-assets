@@ -8,16 +8,12 @@
  */
 class Kohana_Controller_Assets extends Controller {
 
-  /**
-   */
   public function action_serve()
   {
-    $sources = Assets::find_sources( $target = $this->request->param('target') );
+    $target = Assets::target_dir().$this->request->param('target');
 
-    if ($sources)
+    if ($sources = Assets::find_sources($target))
     {
-      $target = Assets::$config->target_dir.$target;
-
       // Create parent directories
       if (is_dir($dir = dirname($target)) || mkdir($dir, 0777, TRUE))
       {
@@ -35,7 +31,8 @@ class Kohana_Controller_Assets extends Controller {
           }
           else if (is_callable($fn = "Assets::compile_{$type}"))
           {
-            $result.= call_user_func($fn, $source);
+            // Compile asset
+            $result.= call_user_func($fn, file_get_contents($source), $source);
           }
           else
           {
@@ -51,7 +48,7 @@ class Kohana_Controller_Assets extends Controller {
         if (is_file($target) || is_link($target))
         {
           // Success!
-          $this->request->redirect( $this->request->uri() );
+          $this->request->redirect($this->request->uri());
         }
       }
     }

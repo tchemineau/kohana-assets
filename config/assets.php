@@ -2,9 +2,6 @@
 
 return array
 (
-  'source_dir' => 'assets/',
-  'target_dir' =>  DOCROOT.'assets/',
-
   'concatable' => array(),
 
   'types' => array(
@@ -19,7 +16,7 @@ return array
     'js'  => array('js', 'coffee'),
   ),
 
-  'watch' => Kohana::$environment === Kohana::DEVELOPMENT,
+  'watch' => Kohana::$environment === Kohana::DEVELOPMENT
 );
 
 ?>
