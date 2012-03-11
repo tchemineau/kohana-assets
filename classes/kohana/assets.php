@@ -44,8 +44,11 @@ class Kohana_Assets {
 
     $lessc = new lessc();
 
+    // Cascaded imports!
+    $paths = self::include_paths( substr($source['path'], strlen($source['include_path'])) );
+
     $lessc->importDisabled = FALSE;
-    $lessc->importDir = self::include_paths( substr($source['path'], $source['include_path']) );
+    $lessc->importDir = $paths;
 
     return self::compile_css($lessc->parse($less));
   }
