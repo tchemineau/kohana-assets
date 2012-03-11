@@ -38,14 +38,14 @@ class Kohana_Assets {
     return JSMinPlus::minify($js).';';
   }
 
-  static function compile_less($less, $filename)
+  static function compile_less($less, array $source)
   {
     self::vendor('lessphp/lessc.inc');
 
     $lessc = new lessc();
 
     $lessc->importDisabled = FALSE;
-    $lessc->importDir = dirname($filename);
+    $lessc->importDir = self::include_paths( substr($source['path'], $source['include_path']) );
 
     return self::compile_css($lessc->parse($less));
   }
@@ -55,19 +55,18 @@ class Kohana_Assets {
    *
    * @param   string  Target asset (e.g. css/style.css)
    *
-   * @return  array   Array containing the target's source files, or NULL
+   * @return  array   NULL or array(include path, source file(s))
    */
   static function find_sources($target)
   {
-    $target = pathinfo( substr($target, strlen(self::target_dir())) );
+    $target = pathinfo(substr($target, strlen(self::target_dir())));
 
     if ( ! isset($target['extension']))
     {
       $target['extension'] = '';
     }
 
-    $target += array
-    (
+    $target += array(
       // Path without the extension
       'pathname' => "{$target['dirname']}/{$target['filename']}",
 
@@ -75,11 +74,7 @@ class Kohana_Assets {
       'type' => self::get_type($target['extension'])
     );
 
-    $source = array
-    (
-      // Directory that will contain source file(s)
-      'dirname' => self::source_dir().$target['dirname'],
-
+    $source = array(
       // Possible extension(s)
       'extension' => $target['extension'],
 
@@ -87,36 +82,41 @@ class Kohana_Assets {
       'type' => (array) Arr::get(self::$config->target_types, $target['type']),
     );
 
+    $concatable = FALSE;
+
     if ($source['type'])
     {
-      // It's a known type, so there is a compilation step possibly involving
-      // multiple sources of different types
-      $source['extension'] = self::get_type_ext($source['type']);
+      // Target could consist of a directory of source files
+      $concatable = in_array($target['pathname'], self::$config->concatable, TRUE);
 
-      if (in_array($target['pathname'], self::$config->concatable))
-      {
-        foreach (Kohana::include_paths() as $dir)
-        {
-          if (is_dir($dir.= $source['dirname'].'/'.$target['filename']))
-          {
-            // Multiple sources
-            return self::ls($dir, $source['extension']);
-          }
-        }
-      }
+      // It's a known type, so there is a compilation step possibly involving
+      // multiple sources of multiple different types
+      $source['extension'] = self::get_type_ext($source['type']);
     }
 
-    foreach ((array) $source['extension'] as $ext)
+    foreach (self::include_paths() as $include_path)
     {
-      if ($ext && $ext{0} === '.')
+      // Path to test
+      $path = $include_path.$target['pathname'];
+
+      if ($concatable && is_dir($path))
       {
-        $ext = substr($ext, 1);
+        // Multiple sources
+        return array($include_path, self::ls($path, $source['extension']));
       }
 
-      if ($file = Kohana::find_file($source['dirname'], $target['filename'], $ext))
+      foreach ((array) $source['extension'] as $ext)
       {
-        // Single source
-        return array($file);
+        if ($ext && $ext{0} !== '.')
+        {
+          $ext = ".$ext";
+        }
+
+        if (file_exists($file = $path.$ext))
+        {
+          // Single source
+          return array($include_path, $file);
+        }
       }
     }
 
@@ -124,7 +124,7 @@ class Kohana_Assets {
   }
 
   /**
-   * Determine the type given a file extension.
+   * Determine the asset type given its file extension.
    */
   static function get_type($ext)
   {
@@ -145,7 +145,7 @@ class Kohana_Assets {
   }
 
   /**
-   * Get the extension(s) for the given type(s).
+   * Get the file extension(s) for the given type(s).
    */
   static function get_type_ext($types)
   {
@@ -157,6 +157,20 @@ class Kohana_Assets {
     }
 
     return $ext;
+  }
+
+  /**
+   */
+  static function include_paths($path = '')
+  {
+    $paths = array();
+
+    foreach (Kohana::include_paths() as $include_path)
+    {
+      $paths[] = $include_path.self::source_dir().$path;
+    }
+
+    return $paths;
   }
 
   /**
@@ -194,7 +208,7 @@ class Kohana_Assets {
    *
    * @return  array  List of files
    */
-  static function ls($dir, array $extensions = NULL, $recurse = FALSE)
+  static function ls($dir, $extensions = NULL, $recurse = FALSE)
   {
     $files = array();
 
@@ -204,7 +218,7 @@ class Kohana_Assets {
       {
         $ext = '.'.pathinfo($file->getFilename(), PATHINFO_EXTENSION);
 
-        if ($extensions === NULL || in_array($ext, $extensions))
+        if ($extensions === NULL || in_array($ext, (array) $extensions, TRUE))
         {
           $files[] = $file->getPathname();
         }
@@ -232,7 +246,9 @@ class Kohana_Assets {
     {
       $target_modified = filemtime($target);
 
-      foreach ((array) self::find_sources($target) as $source)
+      list($include_path, $sources) = self::find_sources($target);
+
+      foreach ((array) $sources as $source)
       {
         if (filemtime($source) > $target_modified)
         {
@@ -244,11 +260,15 @@ class Kohana_Assets {
     return FALSE;
   }
 
+  /**
+   */
   static function source_dir()
   {
     return 'assets/';
   }
 
+  /**
+   */
   static function target_dir()
   {
     return DOCROOT.self::source_dir();

@@ -10,18 +10,27 @@ class Kohana_Controller_Assets extends Controller {
 
   public function action_serve()
   {
-    $target = Assets::target_dir().$this->request->param('target');
+    $target = Assets::target_dir() . $this->request->param('target');
 
-    if ($sources = Assets::find_sources($target))
+    // Search for source files
+    list($include_path, $sources) = Assets::find_sources($target);
+
+    if ($sources)
     {
-      // Create parent directories
+      // Create parent directories as necessary
       if (is_dir($dir = dirname($target)) || mkdir($dir, 0777, TRUE))
       {
         $result = FALSE;
 
-        foreach ($sources as $source)
+        foreach ((array) $sources as $source)
         {
-          $type = Assets::get_type(pathinfo($source, PATHINFO_EXTENSION));
+          $info = pathinfo($source);
+
+          // Additional info
+          $info += array('path' => $source, 'include_path' => $include_path);
+
+          // Check if the asset type is known
+          $type = Assets::get_type($info['extension']);
 
           if ( ! $type)
           {
@@ -31,8 +40,8 @@ class Kohana_Controller_Assets extends Controller {
           }
           else if (is_callable($fn = "Assets::compile_{$type}"))
           {
-            // Compile asset
-            $result.= call_user_func($fn, file_get_contents($source), $source);
+            // Compiled asset
+            $result.= call_user_func($fn, file_get_contents($source), $info);
           }
           else
           {
