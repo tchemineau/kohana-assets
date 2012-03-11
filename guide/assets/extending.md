@@ -18,13 +18,13 @@ and b). we're using an external program.
 
     class Assets extends Kohana_Assets {
 
-      function compile_png($png, $filename)
+      function compile_png($png, array $source)
       {
         // Create a temporary location to store the optimized image
         $tmp = tempnam('/tmp/', '');
 
         // Run
-        exec('optipng '.$filename.' -out '.$tmp);
+        exec("optipng {$source['path']} -out {$tmp}");
 
         // Return image
         return file_get_contents($tmp);
