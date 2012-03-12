@@ -21,6 +21,8 @@ class yy_Base
 
   function __construct() {}
 
+  function constructor() { return $this; }
+
   function __toString()
   {
     return ''.$this->to_string();
