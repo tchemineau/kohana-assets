@@ -42,12 +42,12 @@ class Kohana_Assets {
   {
     self::vendor('lessphp/lessc.inc');
 
-    $lessc = new LessCss();
+    $lessc = new Less();
 
     $lessc->importDisabled = FALSE;
 
     // Cascaded imports
-    $lessc->importRelativeDir = substr($source['path'], strlen($source['include_path']));
+    $lessc->importRelativeDir = substr(dirname($source['path']), strlen($source['include_path']));
     $lessc->importDirs = self::include_paths();
 
     return self::compile_css($lessc->parse($less));
@@ -193,7 +193,8 @@ class Kohana_Assets {
       }
     }
 
-    // Set route.
+    // TODO:
+    // should be target_dir() relative to DOCROOT
     Route::set('assets', self::source_dir().'<target>', array('target' => '.+'))
       ->defaults(array(
           'controller' => 'assets',

@@ -3,18 +3,18 @@
 /**
  * @package Kohana/Assets
  */
-class LessCss extends lessc {
+class Less extends lessc {
 
-  public $importRelativePath = '';
+  public $importRelativeDir = '';
   public $importDirs = array();
 
   function findImport($url)
   {
     if ($url)
     {
-      if ($url{0} !== '/')
+      if (substr($url, 0, 1) !== '/')
       {
-        $url = $this->importRelativePath.'/'.$url;
+        $url = $this->importRelativeDir.'/'.$url;
       }
 
       foreach ((array) $this->importDirs as $dir)
