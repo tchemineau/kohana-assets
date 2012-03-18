@@ -14,20 +14,17 @@ and b). we're using an external program.
         'png' => array('png')
     )
 
-**Step 2**: Create the compiler in `APPPATH/classes/assets.php`.
+**Step 2**: Create the compiler in `APPPATH/classes/assets/compiler/png.php`.
 
-    class Assets extends Kohana_Assets {
+    class Assets_Compiler_Png extends Assets_Compiler {
 
-      function compile_png($png, array $source)
+      // This method is provided for reusability. If you don't need it, don't
+      // implement it.
+      function compile($png) {}
+
+      function compile_asset(array $sources, $target)
       {
-        // Create a temporary location to store the optimized image
-        $tmp = tempnam('/tmp/', '');
-
-        // Run
-        exec("optipng {$source['path']} -out {$tmp}");
-
-        // Return image
-        return file_get_contents($tmp);
+        exec("optipng {$sources[0]} -out $target");
       }
 
     }

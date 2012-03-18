@@ -20,9 +20,8 @@ A quick example with the default config:
     <!doctype html>
     <html>
       <head>
+        <title>Foo Bar</title>
         <?= HTML::style('assets/css/style.css') ?>
-
-        <title>Foo Bar, LLC</title>
 
         <?= HTML::script('assets/js/lib/jquery.js') ?>
         <?= HTML::script('assets/js/lib/jquery.plugin.js') ?>
@@ -32,8 +31,7 @@ A quick example with the default config:
       </body>
     </html>
 
-
-## Multi-source assets
+## Concatable assets
 
 Sometimes it is possible to really speed up your app by combining assets into
 a single file, rather than having multiple smaller ones. In this regard 
@@ -66,10 +64,4 @@ Individual files can still be accessed (e.g. `js/foo_chat/colors.js`).
   - Files in `concatable` folders are concatenated in **no particular order**.
     For CSS this is unacceptable, and should be kept in mind if you plan to use
     it for JavaScript projects.
-
-  - For the above reason it is almost always preferable to have a compiler do
-    it based on directives in the source code (e.g. LESS can combine files
-    based on `@import`). **However, there is currently no way for compilers to
-    communicate those directives back to kohana-assets**, so the `watch` mode
-    will not work as expected.
 
