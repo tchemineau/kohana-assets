@@ -8,10 +8,11 @@
  */
 class Less extends lessc {
 
-  // Don't actually import files, just look for them.
-  public $imports_check = FALSE;
-
+  // Imported files.
   public $imports = array();
+
+  // Don't actually import files, just look for them.
+  public $importsCheck = FALSE;
 
   public $importRelativeDir = '';
   public $importDirs = array();
@@ -33,7 +34,7 @@ class Less extends lessc {
         {
           $this->imports[] = $file;
 
-          return $this->imports_check ? NULL : $file;
+          return $this->importsCheck ? NULL : $file;
         }
       }
     }

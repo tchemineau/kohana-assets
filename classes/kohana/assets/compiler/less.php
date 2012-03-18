@@ -51,11 +51,11 @@ class Kohana_Assets_Compiler_Less extends Kohana_Assets_Compiler {
 
   function dependencies($less)
   {
-    $this->less->import_check = TRUE;
+    $this->less->importsCheck = TRUE;
     $this->less->parse($less);
 
     // Done checking
-    $this->less->import_check = FALSE;
+    $this->less->importsCheck = FALSE;
 
     return $this->less->imports;
   }
