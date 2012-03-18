@@ -1,9 +1,17 @@
 <?php
 
 /**
- * @package Kohana/Assets
+ * Less PHP compiler, modified to make specifying import paths a bit easier.
+ *
+ * @package  Kohana/Assets
+ * @author   Alex Little
  */
 class Less extends lessc {
+
+  // Don't actually import files, just look for them.
+  public $imports_check = FALSE;
+
+  public $imports = array();
 
   public $importRelativeDir = '';
   public $importDirs = array();
@@ -23,12 +31,21 @@ class Less extends lessc {
 
         if ($this->fileExists($file = $full.'.less') || $this->fileExists($file = $full))
         {
-          return $file;
+          $this->imports[] = $file;
+
+          return $this->imports_check ? NULL : $file;
         }
       }
     }
 
     return NULL;
+  }
+
+  function parse($str = null, $initial_variables = null)
+  {
+    $this->imported = array();
+
+    return parent::parse($str, $initial_variables);
   }
 
 }

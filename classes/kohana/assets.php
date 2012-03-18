@@ -10,47 +10,11 @@ class Kohana_Assets {
 
   static $config;
 
-  static function compile_coffee($coffee)
+  static function compiler($type)
   {
-    $level = error_reporting();
-    error_reporting(0);
+    $class = 'Assets_Compiler_'.$type;
 
-    self::vendor('coffeescript/coffeescript');
-
-    error_reporting($level);
-
-    return self::compile_js(CoffeeScript\compile($coffee));
-  }
-
-  static function compile_css($css)
-  {
-    self::vendor('cssmin');
-
-    return CssMin::minify($css);
-  }
-
-  static function compile_js($js)
-  {
-    self::vendor('jsminplus');
-
-    // Strips end semi-colons, which can break multi-source assets; should try
-    // to find a better solution for this.
-    return JSMinPlus::minify($js).';';
-  }
-
-  static function compile_less($less, array $source)
-  {
-    self::vendor('lessphp/lessc.inc');
-
-    $lessc = new Less();
-
-    $lessc->importDisabled = FALSE;
-
-    // Cascaded imports
-    $lessc->importRelativeDir = substr(dirname($source['path']), strlen($source['include_path']));
-    $lessc->importDirs = self::include_paths();
-
-    return self::compile_css($lessc->parse($less));
+    return new $class();
   }
 
   /**
@@ -105,7 +69,7 @@ class Kohana_Assets {
       if ($concatable && is_dir($path))
       {
         // Multiple sources
-        return array($include_path, self::ls($path, $source['extension']));
+        return self::ls($path, $source['extension']);
       }
 
       foreach ((array) $source['extension'] as $ext)
@@ -118,7 +82,7 @@ class Kohana_Assets {
         if (file_exists($file = $path.$ext))
         {
           // Single source
-          return array($include_path, $file);
+          return $file;
         }
       }
     }
@@ -193,9 +157,10 @@ class Kohana_Assets {
       }
     }
 
-    // TODO:
-    // should be target_dir() relative to DOCROOT
-    Route::set('assets', self::source_dir().'<target>', array('target' => '.+'))
+    $dir = substr(self::target_dir(), strlen(DOCROOT));
+
+    // Set route.
+    Route::set('assets', $dir.'<target>', array('target' => '.+'))
       ->defaults(array(
           'controller' => 'assets',
           'action'     => 'serve'
@@ -250,13 +215,27 @@ class Kohana_Assets {
     {
       $target_modified = filemtime($target);
 
-      list($include_path, $sources) = self::find_sources($target);
-
-      foreach ((array) $sources as $source)
+      foreach ((array) self::find_sources($target) as $source)
       {
-        if (filemtime($source) > $target_modified)
+        $dependencies = array($source);
+
+        // Determine type
+        $type = self::get_type(pathinfo($source, PATHINFO_EXTENSION));
+
+        if ($type)
         {
-          return TRUE;
+          $contents = file_get_contents($source);
+
+          $compiler = Assets::compiler($type);
+          $dependencies = array_merge($dependencies, (array) $compiler->dependencies($contents));
+        }
+
+        foreach ($dependencies as $dependency)
+        {
+          if (filemtime($dependency) > $target_modified)
+          {
+            return TRUE;
+          }
         }
       }
     }
@@ -276,16 +255,6 @@ class Kohana_Assets {
   static function target_dir()
   {
     return DOCROOT.self::source_dir();
-  }
-
-  /**
-   */
-  static function vendor()
-  {
-    foreach (func_get_args() as $file)
-    {
-      require_once Kohana::find_file('vendor', $file);
-    }
   }
 
 }

@@ -1,0 +1,65 @@
+<?php
+
+class Kohana_Assets_Compiler_Less extends Kohana_Assets_Compiler {
+
+  function __construct()
+  {
+    parent::__construct();
+
+    $this->vendor('lessphp/lessc.inc');
+
+    $this->less = new Less();
+    $this->less->importDisabled = FALSE;
+  }
+
+  function compile($less)
+  {
+    return Assets::compiler('css')->compile($this->less->parse($less));
+  }
+
+  function compile_asset(array $sources, $target)
+  {
+    $result = '';
+
+    $less = $this->less;
+
+    foreach ($sources as $source)
+    {
+      $less->importDirs = Assets::include_paths();
+
+      // Determine the base include path that the source resides under.
+      $include_path = '';
+
+      foreach ($less->importDirs as $path)
+      {
+        if (strpos($source, $path) === 0)
+        {
+          $include_path = $path;
+          break;
+        }
+      }
+
+      // Set relative path for imports.
+      $less->importRelativeDir = substr(dirname($source), strlen($include_path));
+
+      // Compile.
+      $result.= $this->compile(file_get_contents($source));
+    }
+
+    file_put_contents($target, $result, FILE_APPEND);
+  }
+
+  function dependencies($less)
+  {
+    $this->less->import_check = TRUE;
+    $this->less->parse($less);
+
+    // Done checking
+    $this->less->import_check = FALSE;
+
+    return $this->less->imports;
+  }
+
+}
+
+?>

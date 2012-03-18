@@ -10,48 +10,45 @@ class Kohana_Controller_Assets extends Controller {
 
   public function action_serve()
   {
-    $target = Assets::target_dir() . $this->request->param('target');
+    $target = Assets::target_dir().$this->request->param('target');
 
-    // Search for source files
-    list($include_path, $sources) = Assets::find_sources($target);
-
-    if ($sources)
+    // Look for source files.
+    if ($sources = Assets::find_sources($target))
     {
-      // Create parent directories as necessary
       if (is_dir($dir = dirname($target)) || mkdir($dir, 0777, TRUE))
       {
-        $result = FALSE;
+        $sources_by_type = array();
 
         foreach ((array) $sources as $source)
         {
-          $info = pathinfo($source);
-
-          // Additional info
-          $info += array('path' => $source, 'include_path' => $include_path);
-
-          // Check if the asset type is known
-          $type = Assets::get_type($info['extension']);
+          // Determine type
+          $type = Assets::get_type(pathinfo($source, PATHINFO_EXTENSION));
 
           if ( ! $type)
           {
             // Simple, single-source asset with no compilation step. Just link
             // to it and we're done.
             symlink($source, $target);
-          }
-          else if (is_callable($fn = "Assets::compile_{$type}"))
-          {
-            // Compiled asset
-            $result.= call_user_func($fn, file_get_contents($source), $info);
+
+            break;
           }
           else
           {
-            throw new Kohana_Exception('Missing compiler for asset type :type', array('type' => $type));
+            // Some monkeying around is necessary to support concatable assets,
+            // since they can come from multiple different source types.
+            $sources_by_type[$type][] = $source;
           }
         }
 
-        if ($result !== FALSE)
+        if ($sources_by_type)
         {
-          file_put_contents($target, $result);
+          file_put_contents($target, '');
+
+          foreach ((array) $sources_by_type as $type => $sources)
+          {
+            // Compile asset.
+            Assets::compiler($type)->compile_asset($sources, $target);
+          }
         }
 
         if (is_file($target) || is_link($target))
