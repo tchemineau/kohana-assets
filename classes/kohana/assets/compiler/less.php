@@ -2,7 +2,7 @@
 
 class Kohana_Assets_Compiler_Less extends Kohana_Assets_Compiler {
 
-  function __construct()
+  public function __construct()
   {
     parent::__construct();
 
@@ -12,12 +12,12 @@ class Kohana_Assets_Compiler_Less extends Kohana_Assets_Compiler {
     $this->less->importDisabled = FALSE;
   }
 
-  function compile($less)
+  public function compile($less)
   {
     return Assets::compiler('css')->compile($this->less->parse($less));
   }
 
-  function compile_asset(array $sources, $target)
+  public function compile_asset(array $sources, $target)
   {
     $result = '';
 
@@ -49,7 +49,7 @@ class Kohana_Assets_Compiler_Less extends Kohana_Assets_Compiler {
     file_put_contents($target, $result, FILE_APPEND);
   }
 
-  function dependencies($less)
+  public function dependencies($less)
   {
     $this->less->importsCheck = TRUE;
     $this->less->parse($less);

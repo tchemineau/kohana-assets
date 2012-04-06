@@ -5,7 +5,7 @@ abstract class Kohana_Assets_Compiler {
   /**
    * Constructor (does nothing).
    */
-  function __construct() {}
+  public function __construct() {}
 
   /**
    * Compile the contents of some source file.
@@ -13,7 +13,7 @@ abstract class Kohana_Assets_Compiler {
    * @param  string  The contents of the source file being compiled.
    * @return string  The compiled result.
    */
-  abstract function compile($contents);
+  public abstract function compile($contents);
 
   /**
    * Return a list of any dependencies specified in the $contents of the given
@@ -22,7 +22,7 @@ abstract class Kohana_Assets_Compiler {
    * @param  string  The contents of the source file to examine for dependencies.
    * @return array   List of dependencies or NULL.
    */
-  abstract function dependencies($contents);
+  public abstract function dependencies($contents);
 
   /**
    * Compile an asset's source files and write out to the destination. It should
@@ -33,7 +33,7 @@ abstract class Kohana_Assets_Compiler {
    *
    * @return string The result.
    */
-  function compile_asset(array $sources, $target)
+  public function compile_asset(array $sources, $target)
   {
     $result = '';
 
@@ -48,7 +48,7 @@ abstract class Kohana_Assets_Compiler {
   /**
    * Find and include vendor libraries.
    */
-  function vendor()
+  public function vendor()
   {
     foreach (func_get_args() as $file)
     {

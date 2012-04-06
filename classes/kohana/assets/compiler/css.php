@@ -2,19 +2,19 @@
 
 class Kohana_Assets_Compiler_Css extends Kohana_Assets_Compiler {
 
-  function __construct()
+  public function __construct()
   {
     parent::__construct();
 
     $this->vendor('cssmin');
   }
 
-  function compile($css)
+  public function compile($css)
   {
     return CssMin::minify($css);
   }
 
-  function dependencies($css)
+  public function dependencies($css)
   {
     return NULL;
   }

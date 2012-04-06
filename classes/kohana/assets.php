@@ -8,9 +8,9 @@
  */
 class Kohana_Assets {
 
-  static $config;
+  public static $config;
 
-  static function compiler($type)
+  public static function compiler($type)
   {
     $class = 'Assets_Compiler_'.$type;
 
@@ -24,7 +24,7 @@ class Kohana_Assets {
    *
    * @return  array   NULL or array(include path, source file(s))
    */
-  static function find_sources($target)
+  public static function find_sources($target)
   {
     $target = pathinfo(substr($target, strlen(self::target_dir())));
 
@@ -93,7 +93,7 @@ class Kohana_Assets {
   /**
    * Determine the asset type given its file extension.
    */
-  static function get_type($ext)
+  public static function get_type($ext)
   {
     if ($ext && $ext{0} !== '.')
     {
@@ -114,7 +114,7 @@ class Kohana_Assets {
   /**
    * Get the file extension(s) for the given type(s).
    */
-  static function get_type_ext($types)
+  public static function get_type_ext($types)
   {
     $ext = array();
 
@@ -128,7 +128,7 @@ class Kohana_Assets {
 
   /**
    */
-  static function include_paths($path = '')
+  public static function include_paths($path = '')
   {
     $paths = array();
 
@@ -143,7 +143,7 @@ class Kohana_Assets {
   /**
    * Check for modifications (if enabled) and set asset route.
    */
-  static function init()
+  public static function init()
   {
     self::$config = Kohana::$config->load('assets');
 
@@ -177,7 +177,7 @@ class Kohana_Assets {
    *
    * @return  array  List of files
    */
-  static function ls($dir, $extensions = NULL, $recurse = FALSE)
+  public static function ls($dir, $extensions = NULL, $recurse = FALSE)
   {
     $files = array();
 
@@ -209,7 +209,7 @@ class Kohana_Assets {
    *
    * @return  boolean
    */
-  static function modified($target)
+  public static function modified($target)
   {
     if (is_file($target))
     {
@@ -245,14 +245,14 @@ class Kohana_Assets {
 
   /**
    */
-  static function source_dir()
+  public static function source_dir()
   {
     return 'assets/';
   }
 
   /**
    */
-  static function target_dir()
+  public static function target_dir()
   {
     return DOCROOT.self::source_dir();
   }

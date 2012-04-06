@@ -2,7 +2,7 @@
 
 class Kohana_Assets_Compiler_Coffee extends Assets_Compiler {
 
-  function __construct()
+  public function __construct()
   {
     parent::__construct();
 
@@ -14,12 +14,12 @@ class Kohana_Assets_Compiler_Coffee extends Assets_Compiler {
     error_reporting($level);
   }
 
-  function compile($coffee)
+  public function compile($coffee)
   {
     return Assets::compiler('js')->compile(CoffeeScript\compile($coffee));
   }
 
-  function dependencies($coffee)
+  public function dependencies($coffee)
   {
     return NULL;
   }

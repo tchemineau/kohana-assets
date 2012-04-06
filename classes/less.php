@@ -17,7 +17,7 @@ class Less extends lessc {
   public $importRelativeDir = '';
   public $importDirs = array();
 
-  function findImport($url)
+  public function findImport($url)
   {
     if ($url)
     {
@@ -42,7 +42,7 @@ class Less extends lessc {
     return NULL;
   }
 
-  function parse($str = null, $initial_variables = null)
+  public function parse($str = null, $initial_variables = null)
   {
     $this->imported = array();
 
