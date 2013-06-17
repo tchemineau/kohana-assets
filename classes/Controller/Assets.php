@@ -1,4 +1,4 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 
 /**
  * Main controller.
@@ -64,4 +64,3 @@ class Controller_Assets extends Controller {
 
 }
 
-?>

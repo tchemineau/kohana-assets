@@ -1,4 +1,4 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 
 /**
  * Less PHP compiler, modified to make specifying import paths a bit easier.
@@ -51,4 +51,3 @@ class Less extends lessc {
 
 }
 
-?>

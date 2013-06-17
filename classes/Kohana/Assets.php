@@ -1,4 +1,4 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 
 /**
  * Compilers and other helper functions.
@@ -259,4 +259,3 @@ class Kohana_Assets {
 
 }
 
-?>

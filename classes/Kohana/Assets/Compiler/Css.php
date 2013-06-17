@@ -1,4 +1,4 @@
-<?php
+<?php defined('SYSPATH') or die('No direct script access.');
 
 class Kohana_Assets_Compiler_Css extends Kohana_Assets_Compiler {
 
@@ -21,4 +21,3 @@ class Kohana_Assets_Compiler_Css extends Kohana_Assets_Compiler {
 
 }
 
-?>
