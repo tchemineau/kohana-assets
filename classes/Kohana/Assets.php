@@ -12,7 +12,7 @@ class Kohana_Assets {
 
   public static function compiler($type)
   {
-    $class = 'Assets_Compiler_'.$type;
+    $class = 'Assets_Compiler_'.ucwords($type);
 
     return new $class();
   }
@@ -157,14 +157,14 @@ class Kohana_Assets {
       }
     }
 
-    $dir = substr(self::target_dir(), strlen(DOCROOT));
+    $dir = basename(self::target_dir());
 
     // Set route.
     Route::set('assets', $dir.'<target>', array('target' => '.+'))
       ->defaults(array(
-          'controller' => 'assets',
-          'action'     => 'serve'
-        ));
+         'controller' => 'assets',
+         'action'     => 'serve'
+      ));
   }
 
   /**
@@ -247,14 +247,14 @@ class Kohana_Assets {
    */
   public static function source_dir()
   {
-    return 'assets/';
+    return Kohana::$config->load('assets')->source_dir;
   }
 
   /**
    */
   public static function target_dir()
   {
-    return DOCROOT.self::source_dir();
+    return Kohana::$config->load('assets')->target_dir;
   }
 
 }

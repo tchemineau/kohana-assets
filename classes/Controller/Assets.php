@@ -54,7 +54,7 @@ class Controller_Assets extends Controller {
         if (is_file($target) || is_link($target))
         {
           // Success!
-          $this->request->redirect($this->request->uri());
+          $this->redirect($this->request->uri());
         }
       }
     }

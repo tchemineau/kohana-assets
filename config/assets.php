@@ -2,6 +2,9 @@
 
 return array
 (
+  'source_dir' => 'assets/',
+  'target_dir' => DOCROOT.'/assets/',
+
   'concatable' => array(),
 
   'types' => array(
